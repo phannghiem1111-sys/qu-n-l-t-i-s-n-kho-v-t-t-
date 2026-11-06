@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Xếp ca</title>
+<style>
+:root{--accent:#1E7B4F;--accent-soft:#E3F2EA;--bg:#F4F7F5;--card:#FFFFFF;--text:#14201A;--muted:#6B7A72;--line:#DDE5E0;
+--off:#FCE4E0;--off-t:#B3261E;--ct:#DCE9FB;--ct-t:#1F4FA8;--pq:#EFE3FA;--pq-t:#6A2FA0;--work:#E6F1EA;--work-t:#1E5C3B;--warn:#FFF4DC;--warn-t:#8A5A00}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:15px}
+body{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+.app{display:flex;flex-direction:column;height:100%;max-width:640px;margin:0 auto}
+header{background:var(--accent);color:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}
+header h1{font-size:18px;margin:0;font-weight:700;flex:1}
+header small{opacity:.85;font-size:12px;display:block;font-weight:400}
+main{flex:1;overflow:auto;padding:12px 14px 90px}
+nav{position:fixed;bottom:0;left:0;right:0;max-width:640px;margin:0 auto;background:var(--card);border-top:1px solid var(--line);display:flex;padding-bottom:env(safe-area-inset-bottom,0px)}
+nav button{flex:1;border:0;background:none;padding:10px 4px;color:var(--muted);font-weight:600;font-size:13px;cursor:pointer}
+nav button[aria-selected=true]{color:var(--accent)}
+nav .badge{display:inline-block;background:#B3261E;color:#fff;border-radius:999px;font-size:11px;padding:0 6px;margin-left:4px}
+button{font:inherit;cursor:pointer}
+.btn{background:var(--accent);color:#fff;border:0;border-radius:10px;padding:12px 16px;font-weight:600;width:100%}
+.btn.ghost{background:var(--card);color:var(--accent);border:1px solid var(--line)}
+.btn.danger{background:#fff;color:var(--off-t);border:1px solid #F2C9C3}
+.btn:disabled{opacity:.5}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.strip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 10px;margin:0 -14px;padding-left:14px;padding-right:14px}
+.day{flex:0 0 auto;width:50px;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:6px 0;text-align:center;color:var(--text)}
+.day small{display:block;font-size:11px;color:var(--muted);font-weight:600}
+.day b{font-size:17px;font-variant-numeric:tabular-nums}
+.day.sun small{color:var(--off-t)}
+.day[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.day[aria-pressed=true] small{color:#DFF3E8}
+.tools{display:flex;gap:8px;margin:6px 0 10px}
+input[type=search],input[type=text],select{flex:1;min-width:0;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:11px 12px;font:inherit;color:var(--text)}
+.summary{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 10px}
+.grp{margin:14px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:700}
+.list{background:var(--card);border:1px solid var(--line);border-radius:14px;overflow:hidden}
+.row{display:flex;align-items:center;gap:10px;width:100%;padding:12px 14px;background:none;border:0;border-top:1px solid var(--line);text-align:left;color:var(--text)}
+.row:first-child{border-top:0}
+.row .who{flex:1;min-width:0}
+.row .who b{display:block;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .who span{font-size:12px;color:var(--muted)}
+.pill{display:inline-block;font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;font-size:12px;padding:5px 9px;border-radius:8px;background:var(--work);color:var(--work-t);white-space:nowrap}
+.pill.off{background:var(--off);color:var(--off-t)}
+.pill.ct{background:var(--ct);color:var(--ct-t)}
+.pill.pq{background:var(--pq);color:var(--pq-t)}
+.pill.pending{background:var(--warn);color:var(--warn-t)}
+.pill.chg::after{content:" •";color:#E0A100}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--card);border-radius:999px;padding:8px 12px;font-weight:600;color:var(--text)}
+.chip[aria-pressed=true]{background:var(--accent);border-color:var(--accent);color:#fff}
+.scrim{position:fixed;inset:0;background:rgba(10,20,15,.45);z-index:20}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;background:var(--card);border-radius:18px 18px 0 0;max-height:88vh;overflow:auto;max-width:640px;margin:0 auto;padding:18px 16px calc(18px + env(safe-area-inset-bottom,0px))}
+.sheet h2{margin:0 0 2px;font-size:17px}
+.sheet .sub{color:var(--muted);font-size:13px;margin-bottom:14px}
+.field{display:grid;gap:6px;margin:14px 0}
+.field label{font-size:13px;font-weight:600;color:var(--muted)}
+.banner{padding:11px 13px;border-radius:12px;background:var(--warn);color:var(--warn-t);margin-bottom:12px;font-size:14px}
+.banner.err{background:#FBE3E0;color:var(--off-t)}
+.empty{text-align:center;color:var(--muted);padding:36px 12px}
+.login{min-height:70vh;display:flex;flex-direction:column;justify-content:center;gap:14px;padding:24px}
+.login h2{margin:0;font-size:22px}
+.login p{color:var(--muted);margin:0 0 6px}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(84px + env(safe-area-inset-bottom,0px));background:var(--text);color:#fff;padding:10px 16px;border-radius:999px;z-index:30;font-size:14px;max-width:90%;text-align:center}
+.hidden{display:none !important}
+.req-head{display:flex;justify-content:space-between;align-items:center;margin:4px 0 10px}
+.req-head .seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.req-head .seg button{border:0;background:none;padding:8px 12px;color:var(--muted);font-weight:600}
+.req-head .seg button[aria-selected=true]{background:var(--accent-soft);color:var(--accent)}
+.meta{font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div style="flex:1;min-width:0">
+      <h1 id="title">Xếp ca</h1>
+      <small id="subtitle">Đang tải…</small>
+    </div>
+    <button id="signOutBtn" class="chip hidden" style="font-size:12px;padding:6px 10px">Thoát</button>
+  </header>
+
+  <div id="loginView" class="login hidden">
+    <h2>Xếp ca nhân viên</h2>
+    <p>Đăng nhập bằng tài khoản Google được cấp quyền xem sheet lịch ca.</p>
+    <button class="btn" id="signInBtn">Đăng nhập bằng Google</button>
+    <div id="loginMsg" class="banner err hidden"></div>
+  </div>
+
+  <main id="mainView" class="hidden">
+    <div id="status" class="banner hidden"></div>
+
+    <section id="tabSchedule">
+      <div class="strip" id="strip"></div>
+      <div class="tools">
+        <input type="search" id="q" placeholder="Tìm tên hoặc mã NV">
+        <select id="groupSel" aria-label="Lọc theo nhóm"></select>
+      </div>
+      <div class="summary" id="summary"></div>
+      <div id="staffList"></div>
+    </section>
+
+    <section id="tabRequests" class="hidden">
+      <div class="req-head">
+        <div class="meta" id="reqCount"></div>
+        <div class="seg" role="tablist">
+          <button id="segPending" aria-selected="true">Chờ duyệt</button>
+          <button id="segAll" aria-selected="false">Tất cả</button>
+        </div>
+      </div>
+      <div id="reqList"></div>
+    </section>
+  </main>
+</div>
+
+<nav id="tabs" class="hidden">
+  <button data-tab="schedule" aria-selected="true">Lịch ca</button>
+  <button data-tab="requests" aria-selected="false">Đổi ca <span id="pendingBadge" class="badge hidden"></span></button>
+</nav>
+
+<div id="scrim" class="scrim hidden"></div>
+<div id="sheet" class="sheet hidden" role="dialog" aria-modal="true"></div>
+<div id="toast" class="toast hidden"></div>
+
+<script>
+/* ===== Cấu hình ===== */
+const SHEET_ID = '1JAb1SKr4LjGInpAv7wOTmwFS2-BfvT1AfBqsvdbD6mo';
+const MONTH_TAB = 'T11.2026';
+const REQ_TAB = 'YEU_CAU';
+const LEADERS = [
+  'tangdh@winmart.masangroup.com',
+  'thaitv@winmart.masangroup.com',
+  'thienbv@winmart.masangroup.com',
+  'huynv@winmart.masangroup.com',
+  'phongnx@winmart.masangroup.com',
+  'phannghiem1111@gmail.com'
+];
+const CODES = ['55BR', 'OFF', 'CT01', 'PQ01'];
+const REASONS = ['AL', 'SC khẩn cấp', 'KS kiểm tra', 'ĐTYC'];
+const REASON_NAME = {
+  'AL': 'Xin nghỉ phép', 'SC khẩn cấp': 'Sửa chữa khẩn cấp',
+  'KS kiểm tra': 'Khảo sát kiểm tra', 'ĐTYC': 'Đội trưởng yêu cầu'
+};
+const WD = ['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'];
+
+/* ===== Trạng thái ===== */
+const S = { email: '', isLeader: false, month: null, reqs: [], selDate: null, tab: 'schedule', reqFilter: 'pending' };
+const $ = s => document.querySelector(s);
+const esc = t => String(t == null ? '' : t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const isLeader = e => LEADERS.includes((e || '').toLowerCase());
+
+function toast(msg) {
+  const t = $('#toast'); t.textContent = msg; t.classList.remove('hidden');
+  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.add('hidden'), 2400);
+}
+function banner(msg, err) {
+  const b = $('#status');
+  if (!msg) { b.classList.add('hidden'); return; }
+  b.textContent = msg; b.className = 'banner' + (err ? ' err' : ''); b.classList.remove('hidden');
+}
+function pillClass(c) {
+  c = (c || '').toUpperCase();
+  if (c === 'OFF') return 'off';
+  if (c.startsWith('CT')) return 'ct';
+  if (c.startsWith('PQ')) return 'pq';
+  return '';
+}
+function colName(n) { // 0-based -> A, B, ... AA
+  let s = ''; n += 1;
+  while (n > 0) { const m = (n - 1) % 26; s = String.fromCharCode(65 + m) + s; n = Math.floor((n - 1) / 26); }
+  return s;
+}
+const todayIso = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+const isoToLabel = iso => { const d = new Date(iso + 'T00:00:00'); return WD[d.getDay()] + ' ' + d.getDate() + '/' + (d.getMonth() + 1); };
+
+/* ===== Gọi Google Sheets ===== */
+function bridgeToken() {
+  try { return (window.Android && Android.getToken()) || ''; } catch (e) { return ''; }
+}
+async function sheetsFetch(path, opts = {}, retry = true) {
+  const token = bridgeToken();
+  if (!token) throw new Error('NOAUTH');
+  const res = await fetch('https://sheets.googleapis.com/v4/spreadsheets/' + SHEET_ID + path, {
+    ...opts,
+    headers: { 'Authorization': 'Bearer ' + token, 'Content-Type': 'application/json', ...(opts.headers || {}) }
+  });
+  if (res.status === 401 && retry) return sheetsFetch(path, opts, false);
+  if (!res.ok) {
+    let m = ''; try { m = (await res.json()).error.message; } catch (e) {}
+    throw new Error('HTTP ' + res.status + (m ? ': ' + m : ''));
+  }
+  return res.json();
+}
+const rangeQ = r => encodeURIComponent(r);
+
+/* Đọc tab lịch tháng: dòng 1 tiêu đề, dòng 2 số ngày, nhân viên từ sau đó */
+async function loadMonth() {
+  const data = await sheetsFetch('/values/' + rangeQ("'" + MONTH_TAB + "'!A1:AO300"));
+  const rows = data.values || [];
+  const hi = rows.findIndex(r => r && /mã\s*nv/i.test(String(r[0] || '')));
+  if (hi < 0) throw new Error('Không thấy cột "Mã NV" trong tab ' + MONTH_TAB);
+  const nums = rows[hi + 1] || [];
+  const dayNums = [];
+  for (let c = 3; c < nums.length; c++) {
+    const v = String(nums[c] || '').trim();
+    if (!/^\d+$/.test(v)) break;
+    dayNums.push(parseInt(v, 10));
+  }
+  if (!dayNums.length) throw new Error('Không đọc được dòng số ngày');
+  const m0 = /T?(\d{1,2})\.(\d{4})/i.exec(MONTH_TAB);
+  let m = +m0[1], y = +m0[2];
+  let wraps = 0; for (let i = 1; i < dayNums.length; i++) if (dayNums[i] < dayNums[i - 1]) wraps++;
+  m -= wraps; while (m < 1) { m += 12; y--; }
+  const dates = [];
+  dayNums.forEach((n, i) => {
+    if (i > 0 && n < dayNums[i - 1]) { m++; if (m > 12) { m = 1; y++; } }
+    dates.push(y + '-' + String(m).padStart(2, '0') + '-' + String(n).padStart(2, '0'));
+  });
+  const staff = [];
+  for (let r = hi + 2; r < rows.length; r++) {
+    const row = rows[r] || [];
+    const id = String(row[0] || '').trim(), name = String(row[1] || '').trim();
+    if (!id || !name) continue;
+    staff.push({
+      id, name, group: String(row[2] || '').trim() || 'Khác', sheetRow: r + 1,
+      codes: dates.map((_, i) => String(row[3 + i] || '').trim().toUpperCase())
+    });
+  }
+  return { dates, staff };
+}
+
+async function loadRequests() {
+  const data = await sheetsFetch('/values/' + rangeQ("'" + REQ_TAB + "'!A2:J1000"));
+  const rows = data.values || [];
+  return rows.map((r, i) => ({
+    row: i + 2, time: r[0] || '', id: r[1] || '', name: r[2] || '', date: r[3] || '',
+    from: r[4] || '', to: r[5] || '', reason: r[6] || '', by: r[7] || '',
+    status: r[8] || '', approver: r[9] || ''
+  })).filter(x => x.id && x.date);
+}
+
+async function submitRequest(item) {
+  const now = new Date().toLocaleString('vi-VN');
+  await sheetsFetch('/values/' + rangeQ("'" + REQ_TAB + "'!A:J") + ':append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS', {
+    method: 'POST',
+    body: JSON.stringify({ values: [[now, item.id, item.name, item.date, item.from, item.to, item.reason, S.email, 'Chờ duyệt', '']] })
+  });
+}
+
+async function setCell(row, col, value) {
+  const range = "'" + MONTH_TAB + "'!" + col + row;
+  await sheetsFetch('/values/' + rangeQ(range) + '?valueInputOption=USER_ENTERED', {
+    method: 'PUT', body: JSON.stringify({ values: [[value]] })
+  });
+}
+async function setReqStatus(row, status) {
+  await sheetsFetch('/values/' + rangeQ("'" + REQ_TAB + "'!I" + row + ':J' + row) + '?valueInputOption=USER_ENTERED', {
+    method: 'PUT', body: JSON.stringify({ values: [[status, S.email]] })
+  });
+}
+
+/* ===== Hiển thị lịch ===== */
+function currentCode(st, i) { return st.codes[i] || ''; }
+function pendingFor(id, date) {
+  return S.reqs.find(r => r.status === 'Chờ duyệt' && r.id === id && r.date === date);
+}
+
+function renderSchedule() {
+  const M = S.month;
+  if (!M) return;
+  if (!S.selDate || !M.dates.includes(S.selDate)) {
+    const t = todayIso();
+    S.selDate = M.dates.includes(t) ? t : M.dates[0];
+  }
+  const idx = M.dates.indexOf(S.selDate);
+  $('#strip').innerHTML = M.dates.map(d => {
+    const day = new Date(d + 'T00:00:00');
+    return `<button class="day${day.getDay() === 0 ? ' sun' : ''}" data-d="${d}" aria-pressed="${d === S.selDate}"><small>${WD[day.getDay()]}</small><b>${day.getDate()}</b></button>`;
+  }).join('');
+  const q = $('#q').value.trim().toLowerCase();
+  const grp = $('#groupSel').value;
+  const list = M.staff.filter(st =>
+    (!grp || st.group === grp) &&
+    (!q || st.name.toLowerCase().includes(q) || st.id.toLowerCase().includes(q)));
+  const counts = {};
+  list.forEach(st => { const c = currentCode(st, idx) || '—'; counts[c] = (counts[c] || 0) + 1; });
+  $('#summary').innerHTML = Object.entries(counts).map(([c, n]) =>
+    `<span class="pill ${pillClass(c)}">${esc(c)} · ${n}</span>`).join('');
+  const groups = {};
+  list.forEach(st => (groups[st.group] = groups[st.group] || []).push(st));
+  const html = Object.entries(groups).map(([g, arr]) => `
+    <div class="grp">${esc(g)}</div>
+    <div class="list">${arr.map(st => {
+      const c = currentCode(st, idx);
+      const pend = pendingFor(st.id, S.selDate);
+      return `<button class="row" data-id="${esc(st.id)}">
+        <div class="who"><b>${esc(st.name)}</b><span>${esc(st.id)}</span></div>
+        ${pend ? '<span class="pill pending">Chờ duyệt</span>' : ''}
+        <span class="pill ${pillClass(c)}">${esc(c || '—')}</span>
+      </button>`;
+    }).join('')}</div>`).join('');
+  $('#staffList').innerHTML = html || '<div class="empty">Không có nhân viên phù hợp</div>';
+}
+
+function fillGroups() {
+  const sel = $('#groupSel'); const cur = sel.value;
+  const groups = [...new Set(S.month.staff.map(s => s.group))].sort();
+  sel.innerHTML = '<option value="">Tất cả nhóm</option>' + groups.map(g => `<option>${esc(g)}</option>`).join('');
+  if (groups.includes(cur)) sel.value = cur;
+}
+
+/* ===== Bảng đổi ca ===== */
+let editing = null;
+function openEditor(id) {
+  if (!S.month) return;
+  const st = S.month.staff.find(s => s.id === id);
+  if (!st) return;
+  const idx = S.month.dates.indexOf(S.selDate);
+  const cur = currentCode(st, idx);
+  editing = { st, idx, date: S.selDate, cur, code: '', reason: '' };
+  const codes = [...new Set([...CODES, ...S.month.staff.flatMap(s => s.codes).filter(Boolean)])].sort();
+  $('#sheet').innerHTML = `
+    <h2>${esc(st.name)}</h2>
+    <div class="sub">${isoToLabel(S.selDate)} · Ca hiện tại: <b>${esc(cur || '—')}</b></div>
+    <div class="field"><label>Mã ca mới</label>
+      <div class="chips" id="codeChips">${codes.map(c => `<button class="chip" data-c="${esc(c)}">${esc(c)}</button>`).join('')}</div>
+      <input type="text" id="codeInput" placeholder="Hoặc gõ mã khác" autocapitalize="characters"></div>
+    <div class="field"><label>Lý do</label>
+      <div class="chips" id="reasonChips">${REASONS.map(r => `<button class="chip" data-r="${esc(r)}" title="${esc(REASON_NAME[r])}">${esc(r)}</button>`).join('')}</div>
+    </div>
+    <button class="btn" id="sendBtn">Gửi yêu cầu đổi ca</button>
+    <div style="height:8px"></div>
+    <button class="btn ghost" id="closeBtn">Đóng</button>`;
+  $('#scrim').classList.remove('hidden'); $('#sheet').classList.remove('hidden');
+}
+function closeEditor() { editing = null; $('#scrim').classList.add('hidden'); $('#sheet').classList.add('hidden'); }
+
+/* ===== Yêu cầu ===== */
+function renderRequests() {
+  const pendingCount = S.reqs.filter(r => r.status === 'Chờ duyệt').length;
+  const b = $('#pendingBadge');
+  if (S.isLeader && pendingCount) { b.textContent = pendingCount; b.classList.remove('hidden'); } else b.classList.add('hidden');
+  $('#reqCount').textContent = S.isLeader ? pendingCount + ' yêu cầu đang chờ' : 'Yêu cầu bạn đã gửi';
+  $('#segPending').setAttribute('aria-selected', S.reqFilter === 'pending');
+  $('#segAll').setAttribute('aria-selected', S.reqFilter === 'all');
+  let items = S.reqs;
+  if (!S.isLeader) items = items.filter(r => r.by.toLowerCase() === S.email.toLowerCase());
+  if (S.reqFilter === 'pending') items = items.filter(r => r.status === 'Chờ duyệt');
+  items = [...items].reverse();
+  if (!items.length) { $('#reqList').innerHTML = '<div class="empty">Không có yêu cầu nào</div>'; return; }
+  $('#reqList').innerHTML = '<div class="list">' + items.map(r => {
+    const canAct = S.isLeader && r.status === 'Chờ duyệt';
+    return `<div class="row" style="cursor:default;align-items:flex-start">
+      <div class="who">
+        <b>${esc(r.name)} · ${esc(isoToLabel(r.date))}</b>
+        <div style="margin:6px 0"><span class="pill ${pillClass(r.from)}">${esc(r.from || '—')}</span> → <span class="pill ${pillClass(r.to)}">${esc(r.to)}</span></div>
+        <span>${esc(r.reason || 'Không ghi lý do')} · ${esc(r.by)}</span><br>
+        <span class="meta">${esc(r.time)} · ${esc(r.status)}${r.approver ? ' · ' + esc(r.approver) : ''}</span>
+        ${canAct ? `<div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn" style="padding:9px" data-approve="${r.row}">Xác nhận</button>
+          <button class="btn danger" style="padding:9px" data-reject="${r.row}">Từ chối</button></div>` : ''}
+      </div></div>`;
+  }).join('') + '</div>';
+}
+
+async function approve(rowNo) {
+  const r = S.reqs.find(x => x.row === rowNo);
+  if (!r) return;
+  try {
+    const m = await loadMonth();
+    const st = m.staff.find(s => s.id === r.id);
+    const i = m.dates.indexOf(r.date);
+    if (!st || i < 0) throw new Error('Không tìm thấy nhân viên hoặc ngày trong sheet');
+    await setCell(st.sheetRow, colName(3 + i), r.to);
+    await setReqStatus(r.row, 'Đã xác nhận');
+    toast('Đã xác nhận đổi ca');
+    await refresh();
+  } catch (e) { banner('Xác nhận thất bại: ' + e.message, true); }
+}
+async function reject(rowNo) {
+  try {
+    await setReqStatus(rowNo, 'Từ chối');
+    toast('Đã từ chối');
+    await refresh();
+  } catch (e) { banner('Không từ chối được: ' + e.message, true); }
+}
+
+/* ===== Tải và làm mới ===== */
+async function refresh() {
+  try {
+    banner('');
+    const [m, reqs] = await Promise.all([loadMonth(), loadRequests()]);
+    S.month = m; S.reqs = reqs;
+    $('#title').textContent = 'Ca ' + MONTH_TAB.replace('T', 'T');
+    $('#subtitle').textContent = S.email + (S.isLeader ? ' · Đội trưởng' : '');
+    fillGroups();
+    renderSchedule(); renderRequests();
+  } catch (e) {
+    if (e.message === 'NOAUTH') { showLogin(); return; }
+    banner('Không tải được dữ liệu: ' + e.message, true);
+  }
+}
+
+function showLogin(msg) {
+  $('#loginView').classList.remove('hidden'); $('#mainView').classList.add('hidden');
+  $('#tabs').classList.add('hidden'); $('#signOutBtn').classList.add('hidden');
+  $('#subtitle').textContent = 'Chưa đăng nhập';
+  if (msg) { $('#loginMsg').textContent = msg; $('#loginMsg').classList.remove('hidden'); }
+}
+function showApp() {
+  $('#loginView').classList.add('hidden'); $('#mainView').classList.remove('hidden');
+  $('#tabs').classList.remove('hidden'); $('#signOutBtn').classList.remove('hidden');
+}
+
+function onSignedIn(email) {
+  S.email = email; S.isLeader = isLeader(email);
+  showApp(); refresh();
+}
+function onSignInFailed(msg) { showLogin('Đăng nhập thất bại: ' + msg); }
+
+function switchTab(t) {
+  S.tab = t;
+  document.querySelectorAll('nav button').forEach(b => b.setAttribute('aria-selected', b.dataset.tab === t));
+  $('#tabSchedule').classList.toggle('hidden', t !== 'schedule');
+  $('#tabRequests').classList.toggle('hidden', t !== 'requests');
+}
+
+/* ===== Sự kiện ===== */
+$('#signInBtn').onclick = () => { try { Android.signIn(); } catch (e) { showLogin('Không mở được đăng nhập'); } };
+$('#signOutBtn').onclick = () => { try { Android.signOut(); } catch (e) {} S.email = ''; showLogin(); };
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+$('#strip').onclick = e => { const b = e.target.closest('[data-d]'); if (b) { S.selDate = b.dataset.d; renderSchedule(); } };
+$('#q').oninput = renderSchedule;
+$('#groupSel').onchange = renderSchedule;
+$('#staffList').onclick = e => { const b = e.target.closest('[data-id]'); if (b) openEditor(b.dataset.id); };
+$('#segPending').onclick = () => { S.reqFilter = 'pending'; renderRequests(); };
+$('#segAll').onclick = () => { S.reqFilter = 'all'; renderRequests(); };
+$('#reqList').onclick = e => {
+  const a = e.target.closest('[data-approve]'); if (a) return approve(+a.dataset.approve);
+  const r = e.target.closest('[data-reject]'); if (r) return reject(+r.dataset.reject);
+};
+$('#scrim').onclick = closeEditor;
+$('#sheet').onclick = async e => {
+  if (!editing) return;
+  const c = e.target.closest('[data-c]'), r = e.target.closest('[data-r]');
+  if (c) { editing.code = c.dataset.c; $('#codeInput').value = ''; markChips(); return; }
+  if (r) { editing.reason = r.dataset.r; markChips(); return; }
+  if (e.target.id === 'closeBtn') return closeEditor();
+  if (e.target.id === 'sendBtn') {
+    const typed = ($('#codeInput').value || '').trim().toUpperCase();
+    const to = typed || editing.code;
+    if (!to) return toast('Chọn hoặc gõ mã ca mới');
+    if (to === editing.cur) return toast('Mã ca mới trùng với ca hiện tại');
+    const btn = $('#sendBtn'); btn.disabled = true; btn.textContent = 'Đang gửi…';
+    try {
+      await submitRequest({ id: editing.st.id, name: editing.st.name, date: editing.date, from: editing.cur, to, reason: editing.reason || REASON_NAME[''] || '' });
+      toast('Đã gửi, chờ đội trưởng xác nhận');
+      closeEditor();
+      await refresh();
+    } catch (err) {
+      btn.disabled = false; btn.textContent = 'Gửi yêu cầu đổi ca';
+      banner('Gửi thất bại: ' + err.message, true);
+    }
+  }
+};
+function markChips() {
+  document.querySelectorAll('#codeChips .chip').forEach(x => x.setAttribute('aria-pressed', x.dataset.c === editing.code));
+  document.querySelectorAll('#reasonChips .chip').forEach(x => x.setAttribute('aria-pressed', x.dataset.r === editing.reason));
+}
+
+/* ===== Khởi động ===== */
+window.onSignedIn = onSignedIn;
+window.onSignInFailed = onSignInFailed;
+(function boot() {
+  let email = '';
+  try { email = (window.Android && Android.email()) || ''; } catch (e) {}
+  if (email && bridgeToken()) onSignedIn(email);
+  else showLogin();
+})();
+</script>
+</body>
+</html>
