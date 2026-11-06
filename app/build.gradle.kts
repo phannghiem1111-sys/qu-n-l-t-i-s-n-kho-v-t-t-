@@ -19,11 +19,11 @@ android {
 
     signingConfigs {
         create("release") {
-            // Đọc từ GitHub Secrets khi build trên Actions
-            System.getenv("KEYSTORE_FILE")?.let { storeFile = file(it) }
-            storePassword = System.getenv("KEYSTORE_PASSWORD")
-            keyAlias = System.getenv("KEY_ALIAS")
-            keyPassword = System.getenv("KEY_PASSWORD")
+            // Khoá debug chuẩn của Android (mật khẩu công khai), giữ cố định để SHA-1 không đổi
+            storeFile = file("debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
         }
     }
 
